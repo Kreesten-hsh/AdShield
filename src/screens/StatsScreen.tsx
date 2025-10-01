@@ -1,5 +1,3 @@
-// src/screens/StatsScreen.tsx
-
 import React, { useState, useEffect } from 'react';
 import { 
   SafeAreaView, Text, StyleSheet, View, ScrollView, StatusBar, TouchableOpacity // Import de TouchableOpacity
@@ -88,7 +86,7 @@ const BlockedDomainItem = ({ domain, isLast }: { domain: string, isLast: boolean
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingVertical: 12,
-      borderBottomWidth: isLast ? 0 : 1, // Pas de bordure pour le dernier élément
+      borderBottomWidth: isLast ? 0 : 1,
       borderBottomColor: theme.separator, 
     },
     domainText: { fontSize: 15, color: theme.textPrimary, fontWeight: '500', },
@@ -115,7 +113,7 @@ const StatsScreen = () => {
   const screenStyles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background, },
     header: { padding: 15, backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.separator, },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', color: theme.textPrimary, textAlign: 'center', },
+    headerTitle: { fontSize: 25, fontWeight: 'bold', color: theme.textPrimary, textAlign: 'center', paddingTop: 25, },
     scrollViewContent: { padding: 15, },
     
     chartContainer: {

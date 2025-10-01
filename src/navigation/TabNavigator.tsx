@@ -1,4 +1,3 @@
-// src/navigation/TabNavigator.tsx
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
@@ -22,8 +21,11 @@ const TabNavigator = () => {
           backgroundColor: theme.cardBackground,
           borderTopColor: theme.separator,
           borderTopWidth: 1,
-          paddingBottom: 5,
-          height: 60,
+          paddingTop: 10,
+          height: 85,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
         },
       }}
     >

@@ -19,7 +19,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
     container: { flex: 1, backgroundColor: theme.background, },
     mainContent: { flex: 1, paddingHorizontal: 20, alignItems: 'center', paddingTop: 50, },
     header: { padding: 18, alignItems: 'center', backgroundColor: theme.background, },
-    headerText: { color: theme.textPrimary, fontSize: 20, fontWeight: 'bold', },
+    headerText: { color: theme.textPrimary, fontSize: 25, fontWeight: 'bold', paddingTop: 25, },
   });
 
   return (

@@ -173,7 +173,7 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, },
     header: { padding: 15, borderBottomWidth: 1, },
-    headerTitle: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', },
+    headerTitle: { fontSize: 25, fontWeight: 'bold', textAlign: 'center', paddingTop: 25, },
     scrollViewContent: { padding: 15, },
     
     groupTitle: { fontSize: 14, fontWeight: '600', marginTop: 15, marginBottom: 8, paddingHorizontal: 5, },
