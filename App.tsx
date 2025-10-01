@@ -1,13 +1,21 @@
-import React from 'react';
-import { SafeAreaView, Text } from 'react-native';
+// App.tsx
 
-function App(): React.JSX.Element {
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import TabNavigator from './src/navigation/TabNavigator';
+import { ThemeProvider } from './src/theme/ThemeContext';
+import { ShieldProvider } from './src/context/ShieldContext';
+
+const App = () => {
   return (
-    <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'green' }}>
-      <Text style={{ fontSize: 30, fontWeight: 'bold', color: 'white' }}>
-        AdShield est en ligne !
-      </Text>
-    </SafeAreaView>
+    <ShieldProvider>
+        <ThemeProvider>
+            <NavigationContainer>
+                <TabNavigator />
+            </NavigationContainer>
+        </ThemeProvider>
+    </ShieldProvider>
   );
-}
+};
+
 export default App;

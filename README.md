@@ -1,97 +1,97 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🛡️ AdShield : Votre Bouclier Anti-Publicité (React Native)
 
-# Getting Started
+## Introduction
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+**AdShield** est une application mobile conçue avec **React Native** pour offrir aux utilisateurs une expérience de navigation et d'utilisation sans interruption par les publicités. Notre objectif est de créer une application **légère**, **rapide** et **efficace** qui protège l'utilisateur en temps réel.
 
-## Step 1: Start Metro
+-----
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 📸 Aperçu (Screenshots)
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+*(**NOTE :** Remplacez le texte ci-dessous par des images de votre application dès qu'elles sont prêtes. Laissez les titres pour le moment.)*
 
-```sh
-# Using npm
-npm start
+| Écran d'Accueil | Écran des Paramètres |
+| :---: | :---: |
+| *[Lien vers capture écran 1]* | *[Lien vers capture écran 2]* |
 
-# OR using Yarn
-yarn start
-```
+-----
 
-## Step 2: Build and run your app
+## ⚙️ Technologies Utilisées
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+| Catégorie | Technologie | Description |
+| :--- | :--- | :--- |
+| **Framework** | **React Native** (CLI) | Base de l'application mobile pour un développement multiplateforme. |
+| **Langage** | **TypeScript** | Typification statique pour un code robuste et maintenable. |
+| **Structure** | **Dossier `src/`** | Organisation propre du code source (composants, écrans, etc.). |
+| **Styles** | **StyleSheet / Styles Natifs** | Méthode native de React Native pour le stylisme performant. |
+| **Navigation**| *[À définir, ex : React Navigation]* | Gestion des transitions entre les écrans. |
 
-### Android
+-----
 
-```sh
-# Using npm
-npm run android
+## 🚀 Démarrer le Projet
 
-# OR using Yarn
-yarn android
-```
+Suivez ces instructions pour installer et lancer une copie locale du projet à des fins de développement.
 
-### iOS
+### Prérequis
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+Assurez-vous que votre environnement est configuré pour le développement React Native :
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+  * **Node.js** (version 18+)
+  * **Java Development Kit (JDK)** (version 17)
+  * **Android Studio** (avec les outils CLI et un appareil configuré)
 
-```sh
-bundle install
-```
+### Installation
 
-Then, and every time you update your native dependencies, run:
+1.  **Clonez le dépôt** :
 
-```sh
-bundle exec pod install
-```
+    ```bash
+    git clone https://github.com/votre-nom-utilisateur/AdShield.git
+    cd AdShield
+    ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+2.  **Installez les dépendances Node** :
 
-```sh
-# Using npm
-npm run ios
+    ```bash
+    npm install
+    ```
 
-# OR using Yarn
-yarn ios
-```
+### Lancement de l'Application (Android)
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+1.  **Démarrer le Metro Bundler (Terminal 1)** :
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+    ```bash
+    npx react-native start
+    ```
 
-## Step 3: Modify your app
+2.  **Lancer l'Application (Terminal 2)** :
 
-Now that you have successfully run the app, let's make changes!
+    ```bash
+    npx react-native run-android
+    ```
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+-----
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## 🤝 Contribution
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+Nous accueillons avec plaisir toutes les contributions \! Si vous souhaitez améliorer AdShield :
 
-## Congratulations! :tada:
+1.  *Fork* (dupliquez) le dépôt.
+2.  Créez une nouvelle branche pour votre fonctionnalité (`git checkout -b feature/nom-de-votre-fonctionnalite`).
+3.  Commitez vos changements (`git commit -m 'feat: Ajout d'une nouvelle fonctionnalité X'`).
+4.  Poussez la branche (`git push origin feature/nom-de-votre-fonctionnalite`).
+5.  Ouvrez une **Pull Request** (Demande de Tirage) détaillée.
 
-You've successfully run and modified your React Native App. :partying_face:
+-----
 
-### Now what?
+## 🔑 Licence
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+Ce projet est distribué sous la licence **[MIT License](https://opensource.org/licenses/MIT)**. Voir le fichier `LICENSE` pour plus d'informations.
 
-# Troubleshooting
+-----
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## 👤 Contact
 
-# Learn More
+Développé par **Kreesten AGBOTON**.
 
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+  * [Mon profil GitHub](https://github.com/Kreesten-hsh)
+  * [Mon profil LinkedIn](https://www.linkedin.com/in/kreesten-agboton-4817a1382/)
