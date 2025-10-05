@@ -1,7 +1,8 @@
 // src/context/ShieldContext.tsx
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeModules } from 'react-native';
 
 // 1. Définition du type de contexte
 interface ShieldContextType {
@@ -59,6 +60,18 @@ export const ShieldProvider: React.FC<ShieldProviderProps> = ({ children }) => {
       AsyncStorage.setItem(SHIELD_KEY, newState.toString()).catch(e => {
         console.error("Failed to save shield status to storage", e);
       });
+      // Call native module to start/stop VPN
+      if (NativeModules.AdShield && NativeModules.AdShield.startNativeShield) {
+        NativeModules.AdShield.startNativeShield(newState)
+          .then((result: any) => {
+            console.log("Native module startNativeShield result:", result);
+          })
+          .catch((error: any) => {
+            console.error("Native module startNativeShield error:", error);
+          });
+      } else {
+        console.warn("NativeModules.AdShield.startNativeShield is not available");
+      }
       return newState;
     });
   };
