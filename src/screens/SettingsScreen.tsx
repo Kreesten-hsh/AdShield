@@ -245,8 +245,8 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
     container: { flex: 1, },
     header: { padding: 15, borderBottomWidth: 1, },
-    headerTitle: { fontSize: 25, fontWeight: 'bold', textAlign: 'center', paddingTop: 25, },
-    scrollViewContent: { padding: 15, },
+    headerTitle: { fontSize: 26, fontWeight: 'bold', paddingTop: 30, },
+    scrollViewContent: { padding: 15, paddingBottom: 120},
     
     groupTitle: { fontSize: 14, fontWeight: '600', marginTop: 15, marginBottom: 8, paddingHorizontal: 5, },
     groupContainer: { 
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05, 
         shadowOffset: { width: 0, height: 1 }, 
         shadowRadius: 2, 
-        marginBottom: 20, // Ajout d'une marge entre les groupes
+        marginBottom: 5,
     },
 });
 

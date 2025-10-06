@@ -233,7 +233,7 @@ const ShieldArea: React.FC = () => {
                 </View>
 
                 <View style={dynamicStyles.statItem}>
-                    <Text style={dynamicStyles.statsNumber}>2.3 MB</Text>
+                    <Text style={dynamicStyles.statsNumber}>0 MB</Text>
                     <Text style={dynamicStyles.statsLabel}>Données économisées</Text>
                 </View>
             </View>

@@ -4,7 +4,7 @@ import React from 'react';
 import { 
   SafeAreaView, StyleSheet, View, StatusBar, Text 
 } from 'react-native';
-import ShieldStatusCard from '../components/ShieldStatusCard'; 
+import ShieldStatusCard from '../components/ShieldArea'; 
 import { useAppTheme } from '../theme/ThemeContext';
 import { useShield } from '../context/ShieldContext'; 
 

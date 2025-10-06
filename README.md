@@ -1,97 +1,111 @@
-# 🛡️ AdShield : Votre Bouclier Anti-Publicité (React Native)
 
-## Introduction
+# 🛡️ AdShield : Votre Bouclier Anti-Publicité & Vie Privée (React Native)
 
-**AdShield** est une application mobile conçue avec **React Native** pour offrir aux utilisateurs une expérience de navigation et d'utilisation sans interruption par les publicités. Notre objectif est de créer une application **légère**, **rapide** et **efficace** qui protège l'utilisateur en temps réel.
+## ✨ Proposition de Valeur
 
------
+**AdShield** est une application mobile construite avec **React Native (CLI)** et **TypeScript**, conçue pour offrir une expérience utilisateur fluide, rapide et sécurisée. En agissant comme un **bouclier VPN local** (selon la plateforme), l'application bloque les publicités, les traqueurs et les domaines malveillants en temps réel, garantissant :
 
-## 📸 Aperçu (Screenshots)
-
-*(**NOTE :** Remplacez le texte ci-dessous par des images de votre application dès qu'elles sont prêtes. Laissez les titres pour le moment.)*
-
-| Écran d'Accueil | Écran des Paramètres |
-| :---: | :---: |
-| *[Lien vers capture écran 1]* | *[Lien vers capture écran 2]* |
+  * **Sécurité** : Protection contre les logiciels malveillants et le pistage.
+  * **Performance** : Réduction de la consommation de données et accélération de la navigation.
+  * **Confort** : Une utilisation mobile sans interruption visuelle.
 
 -----
 
-## ⚙️ Technologies Utilisées
+## 🚀 Fonctionnalités Clés
 
-| Catégorie | Technologie | Description |
+| Icône | Fonctionnalité | Description |
+| :---: | :--- | :--- |
+| 🛡️ | **Protection en Temps Réel** | Blocage instantané des publicités et des traqueurs via un service VPN local. |
+| 📊 | **Statistiques Détaillées** | Visualisation du nombre de publicités bloquées et de la bande passante économisée. |
+| 🎨 | **UI Moderne & Minimaliste** | Conception épurée et réactive, compatible avec les thèmes clair et sombre. |
+| ⚛️ | **Code Natif & Hybride** | Utilisation de modules natifs pour une intégration performante (Android/iOS). |
+
+-----
+
+## 📸 Aperçu de l'Interface
+
+| Écran d'Accueil (Activation/Statut) | Écran des Statistiques (Métrique) | Écran des Réglages (Configuration) |
+| :---: | :---: | :---: |
+| ![Accueil AdShield](https://raw.githubusercontent.com/Kreesten-hsh/AdShield/main/screenshots/home.jpg) | ![Stats AdShield](https://raw.githubusercontent.com/Kreesten-hsh/AdShield/main/screenshots/stats.jpg) | ![Réglages AdShield](https://raw.githubusercontent.com/Kreesten-hsh/AdShield/main/screenshots/settings.jpg) |
+
+---
+
+## ⚙️ Technologies et Architecture
+
+| Catégorie | Technologie | Rôle dans le Projet |
 | :--- | :--- | :--- |
-| **Framework** | **React Native** (CLI) | Base de l'application mobile pour un développement multiplateforme. |
-| **Langage** | **TypeScript** | Typification statique pour un code robuste et maintenable. |
-| **Structure** | **Dossier `src/`** | Organisation propre du code source (composants, écrans, etc.). |
-| **Styles** | **StyleSheet / Styles Natifs** | Méthode native de React Native pour le stylisme performant. |
-| **Navigation**| *[À définir, ex : React Navigation]* | Gestion des transitions entre les écrans. |
+| **Framework** | **React Native** (CLI) | Base du développement mobile multiplateforme. |
+| **Langage** | **TypeScript** | Assure la robustesse et la maintenabilité du code avec typage statique. |
+| **Gestion d'État**| **React Context / Hooks** | Gestion du statut du bouclier (`ShieldContext`) et des données globales. |
+| **Navigation**| **React Navigation (Tab)** | **Gestion des écrans principaux via une barre d'onglets personnalisée et moderne.** |
+| **Persistance** | **AsyncStorage** | Stockage local des préférences utilisateur et des compteurs (pub bloquées). |
+| **UI/Thèmes** | **Stylesheets & Context** | Stylisme performant et prise en charge native des thèmes (Dark/Light Mode). |
 
 -----
 
-## 🚀 Démarrer le Projet
+## 🛠️ Démarrer le Développement
 
-Suivez ces instructions pour installer et lancer une copie locale du projet à des fins de développement.
+Suivez ces instructions pour lancer le projet dans votre environnement de développement local.
 
 ### Prérequis
 
-Assurez-vous que votre environnement est configuré pour le développement React Native :
+Assurez-vous que votre environnement est configuré selon la [documentation officielle React Native CLI](https://reactnative.dev/docs/environment-setup) :
 
   * **Node.js** (version 18+)
-  * **Java Development Kit (JDK)** (version 17)
-  * **Android Studio** (avec les outils CLI et un appareil configuré)
+  * **Java Development Kit (JDK)** (version 17 ou supérieure)
+  * **Android Studio** (avec les outils et un émulateur/appareil configuré)
+  * **Xcode** (pour le développement iOS, optionnel)
 
-### Installation
+### Installation et Lancement
 
-1.  **Clonez le dépôt** :
+1.  **Clonez le dépôt :**
 
     ```bash
-    git clone https://github.com/votre-nom-utilisateur/AdShield.git
+    git clone https://github.com/Kreesten-hsh/AdShield.git
     cd AdShield
     ```
 
-2.  **Installez les dépendances Node** :
+2.  **Installez les dépendances :**
 
     ```bash
     npm install
     ```
 
-### Lancement de l'Application (Android)
+3.  **Lancement (Android) :**
 
-1.  **Démarrer le Metro Bundler (Terminal 1)** :
-
-    ```bash
-    npx react-native start
-    ```
-
-2.  **Lancer l'Application (Terminal 2)** :
-
-    ```bash
-    npx react-native run-android
-    ```
+      * **Terminal 1 (Metro Bundler) :**
+        ```bash
+        npx react-native start
+        ```
+      * **Terminal 2 (Lancement de l'App) :**
+        ```bash
+        npx react-native run-android
+        ```
 
 -----
 
-## 🤝 Contribution
+## 🤝 Contribuer au Projet
 
-Nous accueillons avec plaisir toutes les contributions \! Si vous souhaitez améliorer AdShield :
+Toutes les contributions qui rendent AdShield plus rapide, plus sûr ou plus beau sont les bienvenues \!
 
-1.  *Fork* (dupliquez) le dépôt.
-2.  Créez une nouvelle branche pour votre fonctionnalité (`git checkout -b feature/nom-de-votre-fonctionnalite`).
-3.  Commitez vos changements (`git commit -m 'feat: Ajout d'une nouvelle fonctionnalité X'`).
-4.  Poussez la branche (`git push origin feature/nom-de-votre-fonctionnalite`).
-5.  Ouvrez une **Pull Request** (Demande de Tirage) détaillée.
+1.  *Fork* (dupliquez) ce dépôt.
+2.  Créez votre branche de fonctionnalité : `git checkout -b feat/nom-de-la-feature`
+3.  Commitez vos changements : `git commit -m 'feat: Nouvelle implémentation de X'`
+4.  Poussez la branche : `git push origin feat/nom-de-la-feature`
+5.  Ouvrez une **Pull Request (PR)** détaillée.
 
 -----
 
 ## 🔑 Licence
 
-Ce projet est distribué sous la licence **[MIT License](https://opensource.org/licenses/MIT)**. Voir le fichier `LICENSE` pour plus d'informations.
+Ce projet est sous licence **[MIT License](https://opensource.org/licenses/MIT)**. Vous pouvez consulter le fichier `LICENSE` pour tous les détails.
 
 -----
 
-## 👤 Contact
+## 👤 Contact Développeur
 
-Développé par **Kreesten AGBOTON**.
+Développé et maintenu par **Kreesten AGBOTON**.
 
   * [Mon profil GitHub](https://github.com/Kreesten-hsh)
   * [Mon profil LinkedIn](https://www.linkedin.com/in/kreesten-agboton-4817a1382/)
+  * **Email :** *[akreesten@gmail.com]*

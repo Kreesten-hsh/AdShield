@@ -20,8 +20,29 @@ interface ThemeProps {
 }
 
 const TabNavigator = () => {
-    // Cast pour s'assurer que TypeScript gère correctement la structure du thème
     const { theme } = useAppTheme() as unknown as { theme: ThemeProps };
+
+    // --- SÉLECTION D'ICÔNES FINALE (Bouclier pour Accueil, Classiques pour le reste) ---
+    const getTabIcon = (routeName: string, focused: boolean) => {
+        let iconName: string;
+        
+        if (routeName === 'Accueil') {
+            // Choix FINAL: Bouclier stylisé pour l'écran de protection
+            iconName = focused ? 'shield-sharp' : 'shield-outline'; 
+        } else if (routeName === 'Stats') {
+            // Stats: Graphique à barres
+            iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+        } else if (routeName === 'Réglages') {
+            // Réglages: Engrenage classique et propre
+            iconName = focused ? 'cog' : 'cog-outline';
+        } else {
+            iconName = 'help-circle-outline';
+        }
+        return iconName;
+    };
+    
+    // Taille de l'icône ajustée pour une touche plus moderne
+    const ICON_SIZE_BASE = 26;
 
     return (
         <Tab.Navigator
@@ -30,71 +51,66 @@ const TabNavigator = () => {
                 tabBarActiveTintColor: theme.primary,
                 tabBarInactiveTintColor: theme.textSecondary,
                 
-                // --- STYLES DE LA BARRE DE NAVIGATION
+                // --- STYLES DE LA BARRE DE NAVIGATION (Maintenus)
                 tabBarStyle: {
                     backgroundColor: theme.cardBackground,
-                    // Suppression de la bordure supérieure par défaut
                     borderTopWidth: 0, 
                     
-                    // Ombre pour simuler la flottaison
-                    elevation: 10,
+                    // Ombre douce pour simuler la flottaison
+                    elevation: 15, 
                     shadowColor: '#000',
-                    shadowOpacity: 0.1,
+                    shadowOpacity: 0.15, 
                     shadowOffset: { width: 0, height: -5 },
-                    shadowRadius: 10,
+                    shadowRadius: 15, 
                     
-                    // Coins arrondis sur les bords supérieurs
-                    borderTopLeftRadius: 20,
-                    borderTopRightRadius: 20,
+                    // Coins arrondis
+                    borderTopLeftRadius: 25, 
+                    borderTopRightRadius: 25, 
                     
-                    // Hauteur ajustée pour iOS et Android
-                    height: Platform.OS === 'ios' ? 90 : 80,
+                    // Hauteur ajustée
+                    height: Platform.OS === 'ios' ? 95 : 80, 
                     
-
                     paddingTop: 12,
-                    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+                    paddingBottom: Platform.OS === 'ios' ? 30 : 15, 
                     
                     position: 'absolute',
                 },
                 
                 // Styles de l'étiquette (label)
                 tabBarLabelStyle: {
-                    fontSize: 13,
+                    fontSize: 12, 
                     fontWeight: '600',
                 },
 
                 // Logique pour les icônes (Utilisation des icônes pleines/contourées)
-                tabBarIcon: ({ color, focused }) => { // Suppression de 'size' dans la déstructuration
-                let iconName: string;
-                const customSize = 25; // Agrandir l'icône si sélectionnée
+                tabBarIcon: ({ color, focused }) => {
+                    const iconName = getTabIcon(route.name, focused);
+                    // L'icône active est légèrement agrandie (effet "pop-out")
+                    const customSize = focused ? ICON_SIZE_BASE + 2 : ICON_SIZE_BASE;
                     
-                    if (route.name === 'Accueil') {
-                        iconName = focused ? 'shield-checkmark' : 'shield-outline';
-                    } else if (route.name === 'Stats') {
-                        iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-                    } else if (route.name === 'Réglages') {
-                        iconName = focused ? 'settings' : 'settings-outline';
-                    } else {
-                        iconName = 'help-circle-outline';
-                    }
-
-                    return <Ionicons name={iconName} color={color} size={customSize} />;
+                    return (
+                        <Ionicons 
+                            name={iconName} 
+                            color={color} 
+                            size={customSize} 
+                        />
+                    );
                 },
             })}
         >
-            {/* 1. ÉCRAN D'ACCUEIL */}
+            {/* 1. ÉCRAN D'ACCUEIL (Bouclier) */}
             <Tab.Screen
                 name="Accueil"
                 component={HomeScreen}
             />
 
-            {/* 2. ÉCRAN DE STATISTIQUES */}
+            {/* 2. ÉCRAN DE STATISTIQUES (Graphique) */}
             <Tab.Screen
                 name="Stats"
                 component={StatsScreen}
             />
 
-            {/* 3. ÉCRAN DE RÉGLAGES */}
+            {/* 3. ÉCRAN DE RÉGLAGES (Engrenage) */}
             <Tab.Screen
                 name="Réglages"
                 component={SettingsScreen}
