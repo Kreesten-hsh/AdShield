@@ -1,4 +1,4 @@
-// App.tsx
+// src/App.tsx
 
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -7,15 +7,15 @@ import { ThemeProvider } from './src/theme/ThemeContext';
 import { ShieldProvider } from './src/context/ShieldContext';
 
 const App = () => {
-  return (
-    <ShieldProvider>
-        <ThemeProvider>
-            <NavigationContainer>
-                <TabNavigator />
-            </NavigationContainer>
-        </ThemeProvider>
-    </ShieldProvider>
-  );
+  return (
+    <ThemeProvider>
+        <ShieldProvider>
+            <NavigationContainer>
+                <TabNavigator />
+            </NavigationContainer>
+        </ShieldProvider>
+    </ThemeProvider>
+  );
 };
 
 export default App;

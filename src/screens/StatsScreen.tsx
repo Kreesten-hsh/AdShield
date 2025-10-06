@@ -1,206 +1,332 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
-  SafeAreaView, Text, StyleSheet, View, ScrollView, StatusBar, TouchableOpacity // Import de TouchableOpacity
+    SafeAreaView, Text, StyleSheet, View, ScrollView, StatusBar, TouchableOpacity, ActivityIndicator, Alert 
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'; 
 import { useAppTheme } from '../theme/ThemeContext'; 
 
-// --- 1. Simulation de données et Logique de mise à jour ---
+// --- 1. Définition des types et des données initiales ---
 
-// Fonction pour générer des données statistiques réalistes (fausses)
-const generateMockStats = () => {
-    // Génère un nombre total bloqué aléatoire (entre 10,000 et 100,000)
-    const totalBlocked = Math.floor(Math.random() * 90000) + 10000; 
-    // Génère des données économisées aléatoires (entre 0.5 et 2.0 GB)
-    const totalDataSavedGB = (Math.random() * 1.5 + 0.5).toFixed(2); 
-
-    const recentDomains = [
-        'facebook.com', 'googleadservices.com', 'doubleclick.net', 'analytics.com', 
-        'tracking.io', 'pixel.xyz', 'metrics.net', 'adserver.com', 'tracking-pixel.com'
-    ];
-    // Prend un sous-ensemble aléatoire de 4 domaines
-    const blockedDomains = recentDomains
-        .sort(() => 0.5 - Math.random()) 
-        .slice(0, 4);
-
-    return {
-        totalBlocked: totalBlocked.toLocaleString('fr-FR'), // Utiliser la locale pour les séparateurs
-        totalDataSaved: `${totalDataSavedGB} GB`,
-        blockedDomains,
-    };
+type DomainStat = { name: string; count: number };
+type Stats = {
+    totalBlocked: string;
+    totalDataSaved: string;
+    blockedDomains: DomainStat[];
 };
 
-// Hook personnalisé pour gérer et mettre à jour les fausses données
+const initialMockStats: Stats = {
+    totalBlocked: '0',
+    totalDataSaved: '0.00 GB',
+    blockedDomains: [],
+};
+
+// --- 2. Hook Fonctionnel pour la Simulation et la Réinitialisation (CORRIGÉ) ---
+
 const useStatsData = () => {
-    const [stats, setStats] = useState(generateMockStats());
+    // Tous les Hooks sont déclarés en tête de la fonction
+    const [stats, setStats] = useState<Stats>(initialMockStats);
+    const [baseBlocked, setBaseBlocked] = useState(0); 
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Effet pour mettre à jour les statistiques toutes les 30 secondes
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setStats(generateMockStats());
-        }, 30000); 
+    const generateMockStats = useCallback((currentBase: number) => {
+        if (currentBase === 0) {
+            currentBase = Math.floor(Math.random() * 500) + 100;
+        }
 
-        return () => clearInterval(interval);
+        const totalBlocked = currentBase + Math.floor(Math.random() * 2000) + 500; 
+        const totalDataSavedGB = (totalBlocked / 50000 * 0.7 + 0.5).toFixed(2); 
+
+        const recentDomains = [
+            { name: 'googleadservices.com', baseCount: 3000 }, 
+            { name: 'facebook.com', baseCount: 1500 }, 
+            { name: 'adserver.com', baseCount: 2000 }, 
+            { name: 'tracking.io', baseCount: 800 }, 
+            { name: 'doubleclick.net', baseCount: 500 }, 
+            { name: 'analytics.com', baseCount: 100 }, 
+        ];
+
+        const blockedDomains = recentDomains
+            .map(d => ({
+                name: d.name,
+                count: Math.max(0, d.baseCount + Math.floor(Math.random() * 500) - 1000 + (totalBlocked / 100)),
+            }))
+            .filter(d => d.count > 0 && Math.random() > 0.1) 
+            .sort((a, b) => b.count - a.count) 
+            .slice(0, 5); 
+
+        return {
+            stats: {
+                totalBlocked: totalBlocked.toLocaleString('fr-FR'),
+                totalDataSaved: `${totalDataSavedGB} GB`,
+                blockedDomains,
+            },
+            newBaseBlocked: totalBlocked
+        };
     }, []);
 
-    return stats;
+    const updateStats = useCallback(() => {
+        const { stats, newBaseBlocked } = generateMockStats(baseBlocked);
+        setStats(stats);
+        setBaseBlocked(newBaseBlocked);
+    }, [baseBlocked, generateMockStats]);
+
+    // L'effet gère l'initialisation et l'intervalle de manière inconditionnelle
+    useEffect(() => {
+        if (isLoading) {
+             const timer = setTimeout(() => {
+                updateStats(); 
+                setIsLoading(false);
+             }, 1000);
+             return () => clearTimeout(timer);
+        }
+
+        const interval = setInterval(updateStats, 30000); 
+        return () => clearInterval(interval);
+        
+    }, [isLoading, updateStats]);
+
+    // Fonction de réinitialisation
+    const resetStats = () => {
+        Alert.alert(
+            "Réinitialiser les statistiques",
+            "Êtes-vous sûr de vouloir remettre à zéro toutes vos statistiques de blocage ? Cette action est irréversible.",
+            [
+                { text: "Annuler", style: "cancel" },
+                { 
+                    text: "Réinitialiser", 
+                    onPress: () => {
+                        setIsLoading(true);
+                        setStats(initialMockStats);
+                        setBaseBlocked(0); 
+                        // Note: Le useEffect gérera le retour à isLoading(false) après le délai initial
+                    },
+                    style: 'destructive'
+                },
+            ]
+        );
+    };
+
+    const hasStats = useMemo(() => {
+        const total = parseInt(stats.totalBlocked.replace(/\D/g, ''), 10);
+        return total > 0;
+    }, [stats.totalBlocked]);
+
+
+    return { stats, isLoading, resetStats, hasStats };
 };
 
-// --- 2. Composants d'affichage (Simples) ---
+// --- 3. Composants d'affichage ---
 
-const StatCard = ({ title, value, iconName }: { title: string, value: string, iconName: string }) => {
-  const { theme } = useAppTheme();
-  
-  const cardStyles = StyleSheet.create({
-    statCard: {
-      width: '48%',
-      backgroundColor: theme.cardBackground,
-      borderRadius: 12,
-      padding: 15,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOpacity: 0.05,
-      shadowOffset: { width: 0, height: 2 },
-      shadowRadius: 5,
-    },
-    cardTitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 5, },
-    cardValue: { fontSize: 24, fontWeight: '900', color: theme.textPrimary, },
-    cardIcon: { position: 'absolute', top: 15, right: 15, opacity: 0.3, },
-  });
+type CardProps = { title: string, value: string, iconName: string };
 
-  return (
-    <View style={cardStyles.statCard}>
-      <Text style={cardStyles.cardTitle}>{title}</Text>
-      <Text style={cardStyles.cardValue}>{value}</Text>
-      <Ionicons name={iconName} size={24} color={theme.primary} style={cardStyles.cardIcon} />
-    </View>
-  );
+const StatCard = ({ title, value, iconName }: CardProps) => {
+    const { theme } = useAppTheme();
+    
+    const cardStyles = StyleSheet.create({
+        statCard: {
+            width: '48%',
+            backgroundColor: theme.cardBackground,
+            borderRadius: 12,
+            padding: 15,
+            elevation: 2,
+            shadowColor: '#000',
+            shadowOpacity: 0.05,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 5,
+        },
+        cardTitle: { fontSize: 14, color: theme.textSecondary, marginBottom: 5, },
+        cardValue: { fontSize: 24, fontWeight: '900', color: theme.textPrimary, },
+        cardIcon: { position: 'absolute', top: 15, right: 15, opacity: 0.3, },
+    });
+
+    return (
+        <View style={cardStyles.statCard}>
+            <Text style={cardStyles.cardTitle}>{title}</Text>
+            <Text style={cardStyles.cardValue}>{value}</Text>
+            <Ionicons name={iconName} size={24} color={theme.primary} style={cardStyles.cardIcon} />
+        </View>
+    );
 };
 
-const BlockedDomainItem = ({ domain, isLast }: { domain: string, isLast: boolean }) => {
-  const { theme } = useAppTheme();
+type DomainItemProps = { domainName: string, count: number, isLast: boolean };
 
-  const domainStyles = StyleSheet.create({
-    domainItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingVertical: 12,
-      borderBottomWidth: isLast ? 0 : 1,
-      borderBottomColor: theme.separator, 
-    },
-    domainText: { fontSize: 15, color: theme.textPrimary, fontWeight: '500', },
-  });
+const BlockedDomainItem = ({ domainName, count, isLast }: DomainItemProps) => {
+    const { theme } = useAppTheme();
 
-  return (
-    <View style={domainStyles.domainItem}>
-      <Text style={domainStyles.domainText}>{domain}</Text>
-      <Ionicons name="lock-closed" size={16} color={theme.textSecondary} />
-    </View>
-  );
+    const domainStyles = StyleSheet.create({
+        domainItem: {
+            flexDirection: 'row',
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            paddingVertical: 12,
+            borderBottomWidth: isLast ? 0 : 1,
+            borderBottomColor: theme.separator, 
+        },
+        leftContainer: { flexDirection: 'row', alignItems: 'center' },
+        domainText: { fontSize: 15, color: theme.textPrimary, fontWeight: '500', marginLeft: 8 },
+        countText: { fontSize: 15, color: theme.textSecondary, fontWeight: '600' },
+    });
+
+    return (
+        <View style={domainStyles.domainItem}>
+            <View style={domainStyles.leftContainer}> 
+                <Ionicons name="lock-closed" size={16} color={theme.error} />
+                <Text style={domainStyles.domainText}>{domainName}</Text>
+            </View>
+            <Text style={domainStyles.countText}>{count.toLocaleString('fr-FR')}</Text>
+        </View>
+    );
 };
 
 
 /**
  * Écran principal des Statistiques
  */
-const StatsScreen = () => {
-  const { theme } = useAppTheme();
-  const isDarkMode = false; // Placeholder, since theme doesn't have it
-  const stats = useStatsData();
-
-  // 🚨 DÉFINITION COMPLÈTE des styles dynamiques
-  const screenStyles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background, },
-    header: { padding: 15, backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.separator, },
-    headerTitle: { fontSize: 25, fontWeight: 'bold', color: theme.textPrimary, textAlign: 'center', paddingTop: 25, },
-    scrollViewContent: { padding: 15, },
+const StatsScreen: React.FC = () => {
+    // ⚠️ ATTENTION : useAppTheme() est le premier Hook appelé.
+    const { theme } = useAppTheme();
     
-    chartContainer: {
-      backgroundColor: theme.cardBackground,
-      borderRadius: 12,
-      padding: 15,
-      marginBottom: 20,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOpacity: 0.05,
-      shadowOffset: { width: 0, height: 2 },
-      shadowRadius: 5,
-    },
-    chartTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: 10, },
-    chartPlaceholder: {
-      height: 150,
-      backgroundColor: theme.separator, 
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.primary,
-      opacity: 0.7,
-    },
-    recentDomainsContainer: {
-      backgroundColor: theme.cardBackground,
-      borderRadius: 12,
-      paddingHorizontal: 15,
-      paddingTop: 15,
-      paddingBottom: 5,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOpacity: 0.05,
-      shadowOffset: { width: 0, height: 2 },
-      shadowRadius: 5,
-    },
-    recentDomainsTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: 10, },
-  });
+    // Le second Hook appelé (useStatsData) est maintenant un appel inconditionnel.
+    const { stats, isLoading, resetStats, hasStats } = useStatsData();
+    
+    // Utilise une inférence de couleur pour déterminer isDarkMode
+    const isDarkMode = theme.textPrimary === '#FFFFFF' || theme.textPrimary === '#FFF'; 
 
-
-  return (
-    <SafeAreaView style={screenStyles.container}>
-      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
-      
-      <View style={screenStyles.header}>
-        <Text style={screenStyles.headerTitle}>Statistiques</Text>
-      </View>
-
-      <ScrollView contentContainerStyle={screenStyles.scrollViewContent}>
+    const screenStyles = StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.background, },
+        header: { padding: 15, backgroundColor: theme.cardBackground, borderBottomWidth: 1, borderBottomColor: theme.separator, },
+        headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 25 },
+        headerTitle: { fontSize: 25, fontWeight: 'bold', color: theme.textPrimary, },
+        scrollViewContent: { padding: 15, },
         
-        {/* 1. Cartes de Synthèse (Valeurs dynamiques) */}
-        <View style={styles.summaryContainer}>
-          <StatCard title="Total bloqué" value={stats.totalBlocked} iconName="shield-outline" />
-          <StatCard title="Données économisées" value={stats.totalDataSaved} iconName="cloud-download-outline" />
-        </View>
+        sectionContainer: {
+            backgroundColor: theme.cardBackground,
+            borderRadius: 12,
+            paddingHorizontal: 15,
+            paddingVertical: 15,
+            marginBottom: 20,
+            elevation: 2,
+            shadowColor: '#000',
+            shadowOpacity: 0.05,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 5,
+        },
+        sectionTitle: { fontSize: 16, fontWeight: '600', color: theme.textPrimary, marginBottom: 10, },
+        
+        chartPlaceholder: {
+            height: 150,
+            backgroundColor: theme.separator, 
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: theme.primary,
+            opacity: 0.7,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        placeholderText: { color: theme.textSecondary, fontStyle: 'italic' },
+        
+        emptyState: { 
+            padding: 30, 
+            alignItems: 'center',
+            backgroundColor: theme.cardBackground,
+            borderRadius: 12,
+            marginBottom: 20,
+        },
+        emptyText: { color: theme.textSecondary, marginTop: 10, textAlign: 'center' },
 
-        {/* 2. Graphique */}
-        <View style={screenStyles.chartContainer}>
-          <Text style={screenStyles.chartTitle}>Activité des 7 derniers jours</Text>
-          <View style={screenStyles.chartPlaceholder} />
-        </View>
+        resetButton: {
+            padding: 8,
+            borderRadius: 20,
+        }
+    });
 
-        {/* 3. Liste des Domaines Bloqués Récemment (Valeurs dynamiques) */}
-        <View style={screenStyles.recentDomainsContainer}>
-          <Text style={screenStyles.recentDomainsTitle}>Domaines bloqués récemment</Text>
-          
-          {/* Mappage des données simulées */}
-          {stats.blockedDomains.map((domain, index) => (
-            <BlockedDomainItem 
-                key={domain} 
-                domain={domain} 
-                isLast={index === stats.blockedDomains.length - 1}
-            />
-          ))}
+    if (isLoading) {
+        return (
+            <SafeAreaView style={screenStyles.container}>
+                <View style={[screenStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <ActivityIndicator size="large" color={theme.primary} />
+                    <Text style={{ color: theme.textSecondary, marginTop: 10 }}>Chargement des statistiques...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+    
+    return (
+        <SafeAreaView style={screenStyles.container}>
+            <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.background} />
+            
+            <View style={screenStyles.header}>
+                <View style={screenStyles.headerRow}>
+                    <Text style={screenStyles.headerTitle}>Statistiques</Text>
+                    <TouchableOpacity 
+                        onPress={resetStats} 
+                        style={[screenStyles.resetButton, { backgroundColor: hasStats ? theme.error : theme.separator, opacity: hasStats ? 1 : 0.5 }]}
+                        disabled={!hasStats}
+                    >
+                        <Ionicons name="trash-outline" size={20} color={theme.background} />
+                    </TouchableOpacity>
+                </View>
+            </View>
 
-        </View>
+            <ScrollView contentContainerStyle={screenStyles.scrollViewContent}>
+                
+                {/* État Vide */}
+                {!hasStats && (
+                    <View style={screenStyles.emptyState}>
+                        <Ionicons name="stats-chart-outline" size={40} color={theme.primary} />
+                        <Text style={screenStyles.emptyText}>
+                            Aucune donnée bloquée pour le moment. Activez le bouclier AdShield pour commencer le filtrage !
+                        </Text>
+                    </View>
+                )}
 
-      </ScrollView>
-    </SafeAreaView>
-  );
+                {/* Contenu des Stats */}
+                {hasStats && (
+                    <>
+                        {/* 1. Cartes de Synthèse */}
+                        <View style={styles.summaryContainer}>
+                            <StatCard title="Total bloqué" value={stats.totalBlocked} iconName="shield-outline" />
+                            <StatCard title="Données économisées" value={stats.totalDataSaved} iconName="cloud-download-outline" />
+                        </View>
+
+                        {/* 2. Graphique */}
+                        <View style={screenStyles.sectionContainer}>
+                            <Text style={screenStyles.sectionTitle}>Activité des 7 derniers jours</Text>
+                            <View style={screenStyles.chartPlaceholder}>
+                                <Text style={screenStyles.placeholderText}>
+                                    [Placeholder pour le graphique réel]
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* 3. Liste des Domaines Bloqués Récemment */}
+                        <View style={screenStyles.sectionContainer}>
+                            <Text style={screenStyles.sectionTitle}>Top 5 des domaines bloqués</Text>
+                            
+                            {stats.blockedDomains.map((domain, index) => (
+                                <BlockedDomainItem 
+                                    key={domain.name} 
+                                    domainName={domain.name}
+                                    count={domain.count}
+                                    isLast={index === stats.blockedDomains.length - 1}
+                                />
+                            ))}
+                        </View>
+                    </>
+                )}
+
+            </ScrollView>
+        </SafeAreaView>
+    );
 };
 
 // Styles statiques (non dépendants du thème)
 const styles = StyleSheet.create({
-  summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
+    summaryContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
 });
 
 export default StatsScreen;

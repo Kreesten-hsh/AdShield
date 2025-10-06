@@ -13,9 +13,8 @@ import android.util.Log
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
-import java.nio.channels.Selector
-import java.nio.channels.SelectionKey
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 class AdShieldVpnService : VpnService() {
 
@@ -25,8 +24,8 @@ class AdShieldVpnService : VpnService() {
     private val NOTIFICATION_ID = 1
     @Volatile private var isRunning = false
     
-    // Ajout d'une référence au thread pour un meilleur contrôle
-    private var vpnThread: Thread? = null
+    private val executor = Executors.newSingleThreadExecutor()
+    private var vpnTask: Future<*>? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -55,12 +54,11 @@ class AdShieldVpnService : VpnService() {
                 .addAddress("10.8.0.1", 24)
                 .addRoute("0.0.0.0", 0)
                 .addDnsServer("8.8.8.8")
-
+            
             vpnInterface = builder.establish()
 
             if (vpnInterface != null) {
                 Log.i(TAG, "VPN établi avec succès.")
-                // 🚨 Démarre le nouveau thread NIO
                 startTunneling()
             } else {
                 Log.e(TAG, "Échec de l'établissement du VPN.")
@@ -72,12 +70,13 @@ class AdShieldVpnService : VpnService() {
 
     private fun stopVpn() {
         Log.d(TAG, "Arrêt du VPN AdShield.")
-        isRunning = false // Indique au thread de s'arrêter
-        vpnThread?.interrupt() // 🚨 Interrompt le thread pour le sortir du selector.select()
+        isRunning = false
+        
+        vpnTask?.cancel(true) 
+        
         try {
             vpnInterface?.close()
             vpnInterface = null
-            vpnThread?.join(1000) // Attendre la fin du thread (max 1s)
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         } catch (e: Exception) {
@@ -85,100 +84,61 @@ class AdShieldVpnService : VpnService() {
         }
     }
     
-    // Remplacement de startTunneling pour gérer le thread
     private fun startTunneling() {
-        if (vpnThread == null || !vpnThread!!.isAlive) {
+        if (vpnTask == null || vpnTask!!.isDone || vpnTask!!.isCancelled) {
             isRunning = true
-            vpnThread = Thread { runTunneling() }
-            vpnThread?.start()
-            Log.d(TAG, "Tunneling thread démarré.")
+            vpnTask = executor.submit { runTunneling() }
+            Log.d(TAG, "Tunneling task démarrée.")
         }
     }
 
-    // 🚨 FONCTION CLÉ : Implémentation du tunneling NIO basé sur Selector
     private fun runTunneling() {
-        // Ces objets seront gérés dans le bloc finally
         var vpnInput: FileInputStream? = null
         var vpnOutput: FileOutputStream? = null
-        var vpnInputChannel: FileChannel? = null
-        var selector: Selector? = null
         
-        // Taille maximale pour un paquet IP
         val buffer = ByteBuffer.allocate(32767) 
 
         try {
             vpnInput = FileInputStream(vpnInterface!!.fileDescriptor)
             vpnOutput = FileOutputStream(vpnInterface!!.fileDescriptor)
-            vpnInputChannel = vpnInput.channel
-            selector = Selector.open()
-
-            // Enregistre le canal VPN pour la lecture. Le Selector surveillera les paquets entrants.
-            vpnInputChannel.configureBlocking(false) // Rendre le canal non bloquant
-            vpnInputChannel.register(selector, SelectionKey.OP_READ)
-
+            
             while (isRunning && !Thread.interrupted()) {
-                // Bloque, n'utilise pas de CPU tant qu'il n'y a pas de trafic
-                val readyChannels = selector.select() 
                 
-                if (readyChannels == 0) continue
+                buffer.clear()
+                val bytesRead = vpnInput.channel.read(buffer) 
+                
+                if (bytesRead > 0) {
+                    buffer.flip() 
+                    val packet = ByteArray(bytesRead)
+                    buffer.get(packet)
 
-                val selectedKeys = selector.selectedKeys()
-                val keyIterator = selectedKeys.iterator()
+                    val processed = processPacket(packet)
 
-                while (keyIterator.hasNext()) {
-                    val key = keyIterator.next()
-                    keyIterator.remove()
-
-                    if (key.isValid && key.isReadable) {
-                        // Un paquet est prêt à être lu depuis l'interface VPN
-                        processVpnInput(vpnInputChannel, vpnOutput, buffer)
+                    if (processed != null) {
+                        vpnOutput.write(processed)
+                    } else {
+                        Log.d(TAG, "Packet dropped (blocked)")
                     }
+                } else if (bytesRead == -1) {
+                    Log.w(TAG, "Interface VPN fermée.")
+                    break
+                } else {
+                    Thread.sleep(10)
                 }
             }
+        } catch (e: InterruptedException) {
+            Log.d(TAG, "Tunneling thread interrompu.")
         } catch (e: Exception) {
-            // C'est normal si le thread est interrompu par stopVpn()
             if (isRunning) { 
                 Log.e(TAG, "Erreur fatale dans le thread de tunneling", e)
             }
         } finally {
             Log.d(TAG, "Tunneling thread arrêté. Fermeture des ressources.")
-            // Fermer toutes les ressources de manière sécurisée
-            try { selector?.close() } catch (e: Exception) { Log.e(TAG, "Erreur fermeture selector", e) }
-            try { vpnInputChannel?.close() } catch (e: Exception) { Log.e(TAG, "Erreur fermeture input channel", e) }
-            try { vpnOutput?.close() } catch (e: Exception) { Log.e(TAG, "Erreur fermeture output", e) }
             try { vpnInput?.close() } catch (e: Exception) { Log.e(TAG, "Erreur fermeture input", e) }
+            try { vpnOutput?.close() } catch (e: Exception) { Log.e(TAG, "Erreur fermeture output", e) }
         }
     }
     
-    // 🚨 NOUVELLE FONCTION: Utilise FileChannel pour la lecture
-    private fun processVpnInput(vpnInputChannel: FileChannel, vpnOutput: FileOutputStream, buffer: ByteBuffer) {
-        buffer.clear()
-        
-        // La lecture non bloquante
-        val bytesRead = vpnInputChannel.read(buffer) 
-        
-        if (bytesRead > 0) {
-            // Préparer le buffer pour la lecture
-            buffer.flip() 
-            
-            // Transformer le ByteBuffer en ByteArray pour utiliser votre logique existante
-            val packet = ByteArray(bytesRead)
-            buffer.get(packet)
-
-            val processed = processPacket(packet)
-
-            if (processed != null) {
-                vpnOutput.write(processed)
-            } else {
-                Log.d(TAG, "Packet dropped (blocked)")
-            }
-        }
-    }
-    
-    // -------------------------------------------------------------------------
-    // VOTRE LOGIQUE DNS EXISTANTE (pas de changement nécessaire dans ces fonctions)
-    // -------------------------------------------------------------------------
-
     private fun processPacket(packet: ByteArray): ByteArray? {
         if (packet.size < 28) return packet
         val ipHeaderLength = (packet[0].toInt() and 0x0F) * 4
@@ -188,10 +148,12 @@ class AdShieldVpnService : VpnService() {
         val dnsStart = ipHeaderLength + 8
         if (dnsStart + 12 > packet.size) return packet
         val domain = parseDnsQueryName(packet, dnsStart + 12)
+        
         if (domain != null && AdShieldNativeModule.checkDomainForBlockingStatic(domain)) {
-            Log.d(TAG, "Blocking domain: $domain")
-            return null
+             Log.d(TAG, "Blocking domain: $domain")
+             return null
         }
+
         return packet
     }
 
@@ -215,12 +177,7 @@ class AdShieldVpnService : VpnService() {
         }
     }
     
-    // -------------------------------------------------------------------------
-    // ... (Le reste des fonctions de notification/revocation/destroy sont inchangées)
-    // -------------------------------------------------------------------------
-
     private fun createNotification(): Notification {
-        // ... (Code de createNotification inchangé) ...
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "AdShield VPN Status"
             val descriptionText = "Le bouclier anti-publicité est actif."
@@ -234,8 +191,13 @@ class AdShieldVpnService : VpnService() {
         }
         
         val pendingIntent: PendingIntent =
-            Intent(this, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            Intent(this, Class.forName("com.adshield.MainActivity")).let { notificationIntent ->
+                val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                }
+                PendingIntent.getActivity(this, 0, notificationIntent, flags)
             }
             
         return Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
@@ -249,6 +211,7 @@ class AdShieldVpnService : VpnService() {
     
     override fun onRevoke() {
         stopVpn()
+        AdShieldNativeModule.getInstance()?.sendVpnStatusEvent("DISCONNECTED")
         Log.w(TAG, "Permission VPN révoquée par le système ou l'utilisateur.")
     }
 

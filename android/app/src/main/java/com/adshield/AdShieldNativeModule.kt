@@ -4,42 +4,44 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.VpnService
-import android.util.Log 
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.WritableMap
+import android.os.Build 
+import android.util.Log
+import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
 class AdShieldNativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
-    // 🚨 Le Companion Object pour stocker l'instance Singleton
+    private val REQUEST_VPN_PERMISSION = 42
+
+    private val mActivityEventListener: ActivityEventListener = object : BaseActivityEventListener() {
+        override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
+            if (requestCode == REQUEST_VPN_PERMISSION) {
+                onVpnPermissionResult(resultCode == Activity.RESULT_OK)
+            }
+        }
+    }
+
     companion object {
-        private var instance: AdShieldNativeModule? = null
+        @Volatile private var instance: AdShieldNativeModule? = null
 
         fun getInstance(): AdShieldNativeModule? {
             return instance
         }
 
         fun checkDomainForBlockingStatic(domain: String): Boolean {
-            // Logique de simulation inchangée
             return domain.contains("facebook") || domain.contains("adserver")
         }
     }
 
     init {
-        // Stocke l'instance du module au moment de sa création
         instance = this
+        reactContext.addActivityEventListener(mActivityEventListener)
     }
 
     override fun getName(): String {
         return "AdShield"
     }
 
-    private val REQUEST_VPN_PERMISSION = 42
-
-    // 🚨 NOUVELLE FONCTION : Envoi d'un événement au JavaScript
     fun sendEvent(eventName: String, params: WritableMap?) {
         try {
             reactApplicationContext
@@ -51,17 +53,26 @@ class AdShieldNativeModule(reactContext: ReactApplicationContext) : ReactContext
         }
     }
 
+    fun sendVpnStatusEvent(status: String) {
+        val params = Arguments.createMap().apply {
+            putString("status", status)
+        }
+        sendEvent("onVpnStatusChange", params)
+    }
+
     private fun startAdShieldService(context: Context) {
         val intent = Intent(context, AdShieldVpnService::class.java)
-        context.startService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
     }
 
     @ReactMethod
     fun startNativeShield(isActive: Boolean, promise: Promise) {
-        Log.d("AdShieldDebug", "🔥🔥 APPEL RÉUSSI au module natif!...")
-        
         val context = reactApplicationContext
-        val activity: Activity? = reactApplicationContext.currentActivity 
+        val activity: Activity? = reactApplicationContext.currentActivity
 
         if (activity == null) {
             promise.reject("ACTIVITY_UNAVAILABLE", "L'activité n'est pas disponible pour démarrer le VPN.")
@@ -70,24 +81,31 @@ class AdShieldNativeModule(reactContext: ReactApplicationContext) : ReactContext
 
         if (isActive) {
             val vpnIntent: Intent? = VpnService.prepare(context)
-            
+
             if (vpnIntent != null) {
-                // Permission non accordée -> Lancer la demande
-                Log.d("AdShieldDebug", "Permission VPN requise. Lancement de l'activité.") 
                 activity.startActivityForResult(vpnIntent, REQUEST_VPN_PERMISSION)
-                
-                promise.resolve("Permission VPN demandée. Veuillez accepter la boîte de dialogue.")
+                promise.resolve("Permission VPN demandée.")
             } else {
-                // Permission déjà accordée -> Démarrer le service directement
-                Log.d("AdShieldDebug", "Permission VPN déjà accordée. Démarrage du service AdShield.")
-                startAdShieldService(context) 
+                startAdShieldService(context)
                 promise.resolve("Service VPN démarré avec succès.")
+                sendVpnStatusEvent("CONNECTED")
             }
         } else {
-            // Logique d'arrêt
             val stopIntent = Intent(context, AdShieldVpnService::class.java).setAction("stop")
             context.startService(stopIntent)
             promise.resolve("Service VPN arrêté avec succès.")
+            sendVpnStatusEvent("DISCONNECTED")
+        }
+    }
+
+    fun onVpnPermissionResult(granted: Boolean) {
+        if (granted) {
+            Log.d("AdShieldDebug", "Permission VPN ACCEPTÉE. Démarrage du service.")
+            startAdShieldService(reactApplicationContext)
+            sendVpnStatusEvent("CONNECTED")
+        } else {
+            Log.d("AdShieldDebug", "Permission VPN REFUSÉE. Arrêt.")
+            sendVpnStatusEvent("DISCONNECTED")
         }
     }
 

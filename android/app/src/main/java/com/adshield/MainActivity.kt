@@ -29,21 +29,5 @@ class MainActivity : ReactActivity() {
   // 🚨 AJOUT ESSENTIEL : Gère le résultat de la boîte de dialogue de permission VPN
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
-    
-    if (requestCode == REQUEST_VPN_PERMISSION) {
-      if (resultCode == RESULT_OK) {
-        // La permission a été accordée. Démarrage du service VPN.
-        val intent = Intent(this, AdShieldVpnService::class.java)
-        startService(intent)
-        Log.d("MainActivity", "Permission VPN accordée. Démarrage du service.")
-        
-        // OPTIONNEL : Envoyer un événement à JavaScript ici pour mettre à jour l'UI.
-        
-      } else {
-        // La permission a été refusée ou l'utilisateur a annulé.
-        Log.d("MainActivity", "Permission VPN refusée.")
-        // OPTIONNEL : Envoyer un événement à JavaScript pour afficher une erreur.
-      }
-    }
   }
 }

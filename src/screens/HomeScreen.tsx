@@ -6,20 +6,20 @@ import {
 } from 'react-native';
 import ShieldStatusCard from '../components/ShieldStatusCard'; 
 import { useAppTheme } from '../theme/ThemeContext';
-import { useShield } from '../context/ShieldContext'; // Lecture de l'état persistant
+import { useShield } from '../context/ShieldContext'; 
 
 type HomeScreenProps = { navigation: any; };
 
 const HomeScreen = ({ navigation }: HomeScreenProps) => {
   const { theme, isDarkMode } = useAppTheme();
-  // 🚨 Lecture de l'état persistant et de la fonction toggle
-  const { isShieldActive, toggleShield } = useShield(); 
   
+  useShield(); // Ensure hook usage for context
+
   const dynamicStyles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background, },
     mainContent: { flex: 1, paddingHorizontal: 20, alignItems: 'center', paddingTop: 50, },
     header: { padding: 18, alignItems: 'center', backgroundColor: theme.background, },
-    headerText: { color: theme.textPrimary, fontSize: 25, fontWeight: 'bold', paddingTop: 25, },
+    headerText: { color: theme.textPrimary, fontSize: 28, fontWeight: '900', paddingTop: 25, letterSpacing: 1.2 },
   });
 
   return (
@@ -34,11 +34,7 @@ const HomeScreen = ({ navigation }: HomeScreenProps) => {
       </View>
 
       <View style={dynamicStyles.mainContent}>
-        {/* Les props viennent du contexte persistant */}
-        <ShieldStatusCard 
-          isActive={isShieldActive} 
-          toggleShield={toggleShield} 
-        />
+        <ShieldStatusCard />
       </View>
     </SafeAreaView>
   );
