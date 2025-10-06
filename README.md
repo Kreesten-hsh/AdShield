@@ -1,5 +1,5 @@
 
-# 🛡️ AdShield : Votre Bouclier Anti-Publicité & Vie Privée (React Native)
+# 🛡️ AdShield : Bouclier Anti-Publicité & Anti-Traqueur (React Native)
 
 ## ✨ Proposition de Valeur
 
